@@ -1,0 +1,23 @@
+sudo ./sandbox goal asset create --creator {ACCOUNT} --total 1000 --unitname votetkn --decimals 0
+
+sudo ./sandbox goal asset send -a 0 -f {VOTER_ACCOUNT} -t {VOTER_ACCOUNT}  --creator {CENTRAL_ACCOUNT} --assetid {ASSETID}
+
+sudo ./sandbox goal asset send -a 1 -f {CENTRAL_ACCOUNT} -t {VOTER_ACCOUNT}  --creator {CENTRAL_ACCOUNT} --assetid {ASSETID}
+
+
+sudo ./sandbox goal app create --creator {CENTRAL_ACCOUNT}   --approval-prog ./data/build/approval.teal --global-byteslices 1 --global-ints 7 --local-byteslices 0 --local-ints 1 --app-arg "int:1" --app-arg "int:2000" --app-arg "int:200" --app-arg "int:3000" --app-arg "int:1"--clear-prog ./data/build/clear.teal
+
+
+sudo ./sandbox goal app optin --app-id {ID} --from {ACCOUNT} 
+
+sudo ./sandbox goal app call --app-id {APPID} --app-arg "str:vote" --app-arg "str:a" --from {ACCOUNT}  --out=unsignedtransaction1.tx
+
+sudo ./sandbox goal asset send --from={ACCOUNT} --to={CENTRAL_ACCOUNT} --creator {CENTRAL_ACCOUNT} --assetid {VOTE_TOKEN_ID} --fee=1000 --amount=1 --out=unsignedtransaction2.tx
+
+cat unsignedtransaction1.tx unsignedtransaction2.tx > combinedtransactions.tx
+
+sudo ./sandbox goal clerk group -i combinedtransactions.tx -o groupedtransactions.tx 
+sudo ./sandbox goal clerk sign -i groupedtransactions.tx -o signout.tx
+sudo ./sandbox goal clerk rawsend -f signout.tx
+
+sudo ./sandbox goal app read --global --app-id 
